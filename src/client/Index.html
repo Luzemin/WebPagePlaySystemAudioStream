@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+    <h1>new WebSocket("ws://localhost:2025/Audio")</h1>
+</body>
+<script>
+    var socket = new WebSocket("ws://localhost:2025/Audio");
+    var context = new window.AudioContext();
+    var reader = new FileReader();
+    socket.onopen = function (evt) {
+        console.log("open");
+        socket.send("start");
+    }
+    socket.onclose = function (evt) {
+        console.log("close");
+    }
+    socket.onerror = function (evt) {
+        console.log("error" + evt.data);
+    }
+    socket.onmessage = function (evt) {
+        console.log("retrive data...");
+        console.log(evt.data)
+        reader.readAsArrayBuffer(evt.data);
+    }
+
+    reader.onloadend = function () {
+        console.log("retrive complete");
+        var res = this.result;
+        context.decodeAudioData(res, function (buffer) {
+            console.log("ready to play");
+
+            var source = context.createBufferSource();
+            source.buffer = buffer;
+            source.connect(context.destination);
+            source.start();
+        }, function (e) {
+            console.log("error" + e.err);
+        })
+    }
+</script>
+
+</html>
